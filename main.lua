@@ -12,7 +12,7 @@ function love.load()
         y = INITIAL_Y,
         width = 25,
         height = 25,
-        speed = 200
+        speed = 300
     }
 
     POINT = {
@@ -82,7 +82,32 @@ function love.draw()
         love.graphics.rectangle("fill", POINT.x, POINT.y, POINT.width, POINT.height)
     end
 
-    love.graphics.print(SCORE, 10, 10)
+    for i = 1, SCORE do
+        local squaresPerSide = math.floor(500 / 25) + 1  -- 20 squares per side (500/25)
+        local totalSquares = squaresPerSide * 4  -- 80 squares total around the rectangle
+        
+        if i <= totalSquares then
+            local side = math.floor((i - 1) / squaresPerSide)  -- 0=top, 1=right, 2=bottom, 3=left
+            local position = (i - 1) % squaresPerSide  -- Position on current side
+            
+            local x, y
+            if side == 0 then  -- Top side
+                x = INITIAL_X + (position * 25)
+                y = INITIAL_Y - 25
+            elseif side == 1 then  -- Right side
+                x = INITIAL_X + 500
+                y = INITIAL_Y + (position * 25)
+            elseif side == 2 then  -- Bottom side
+                x = INITIAL_X + 500 - ((position + 1) * 25)
+                y = INITIAL_Y + 500
+            else  -- Left side
+                x = INITIAL_X - 25
+                y = INITIAL_Y + 500 - ((position + 1) * 25)
+            end
+            
+            love.graphics.rectangle("fill", x, y, 25, 25)
+        end
+    end
 end
 
 function CollitionDetectionPlayer(collider)
