@@ -1,8 +1,14 @@
 love = require("love")
 
 function love.load()
+    love.graphics.setDefaultFilter("nearest", "nearest")
+    
     local width = love.graphics.getWidth()
     local height = love.graphics.getHeight()
+    -- Ouros
+    OurosHead = love.graphics.newImage("assets/ouros-head-simple.png")
+    OurosBody = love.graphics.newImage("assets/ouros-body-simple.png")
+    OurosTail = love.graphics.newImage("assets/ouros-tail-simple.png")
 
     INITIAL_X = width / 2 - 250
     INITIAL_Y = height / 2 - 300
@@ -12,8 +18,29 @@ function love.load()
         y = INITIAL_Y,
         width = 25,
         height = 25,
-        speed = 300
+        speed = 200,
+        sprite = love.graphics.newImage("assets/player.png"),
+        sprite_width = 32,
+        sprite_height = 8,
+        quad_width = 8,
+        quad_height = 8,
+        quads = {},
+        animation = {
+            walk = false,
+            frame = 1,
+            speed = 0.1
+        }
     }
+
+    for i = 1, 4 do
+        PLAYER.quads[i] = love.graphics.newQuad(
+            (i - 1) * PLAYER.quad_width,
+            0,
+            PLAYER.quad_width,
+            PLAYER.quad_height,
+            PLAYER.sprite_width,
+            PLAYER.sprite_height)
+    end
 
     POINT = {
         x = 0,
@@ -22,7 +49,8 @@ function love.load()
         height = 25,
         exists = false,
         timer = 0,
-        collided = false
+        collided = false,
+        sprite = love.graphics.newImage("assets/point.png")
     }
 
     SCORE = 0
@@ -34,20 +62,33 @@ function love.update(dt)
         POINT.timer = POINT.timer + 1
     end
 
+    -- Reset animation state at the beginning of each frame
+    PLAYER.animation.walk = false
+
     if love.keyboard.isDown("up") and PLAYER.y > INITIAL_Y then
         PLAYER.y = PLAYER.y - PLAYER.speed * dt
+        PLAYER.animation.walk = true
     end
 
     if love.keyboard.isDown("down") and PLAYER.y < INITIAL_Y + (500 - PLAYER.height) then
         PLAYER.y = PLAYER.y + PLAYER.speed * dt
+        PLAYER.animation.walk = true
     end
 
     if love.keyboard.isDown("left") and PLAYER.x > INITIAL_X then
         PLAYER.x = PLAYER.x - PLAYER.speed * dt
+        PLAYER.animation.walk = true
     end
 
     if love.keyboard.isDown("right") and PLAYER.x < INITIAL_X + (500 - PLAYER.width) then
         PLAYER.x = PLAYER.x + PLAYER.speed * dt
+        PLAYER.animation.walk = true
+    end
+
+    -- Reset animation frame to 1 when not walking
+    if PLAYER.animation.walk == false then
+        PLAYER.animation.frame = 1
+        PLAYER.animation.speed = 0.1
     end
 
     if POINT.exists == false and POINT.timer > 60 then
@@ -65,9 +106,24 @@ function love.update(dt)
         POINT.exists = false
         POINT.collided = true
     end
+
+    if PLAYER.animation.walk == true then
+        PLAYER.animation.speed = PLAYER.animation.speed + dt
+
+        if PLAYER.animation.speed > 0.2 then
+            PLAYER.animation.speed = 0.1
+
+            PLAYER.animation.frame = PLAYER.animation.frame + 1
+
+            if PLAYER.animation.frame > 4 then
+                PLAYER.animation.frame = 1
+            end
+        end
+    end
 end
 
 function love.draw()
+    -- Map
     love.graphics.rectangle(
         "line",
         INITIAL_X,
@@ -75,13 +131,13 @@ function love.draw()
         500,
         500
     )
-
-    love.graphics.rectangle("fill", PLAYER.x, PLAYER.y, PLAYER.width, PLAYER.height)
-
+    -- Player
+    love.graphics.draw(PLAYER.sprite, PLAYER.quads[PLAYER.animation.frame], PLAYER.x, PLAYER.y, 0, 25 / PLAYER.quad_width, 25 / PLAYER.quad_height)
+    -- Points
     if POINT.exists == true then
-        love.graphics.rectangle("fill", POINT.x, POINT.y, POINT.width, POINT.height)
+        love.graphics.draw(POINT.sprite, POINT.x, POINT.y, 0, 25 / POINT.sprite:getWidth(), 25 / POINT.sprite:getHeight())
     end
-
+    -- Ouros movement
     for i = 1, SCORE do
         local squaresPerSide = math.floor(500 / 25) + 1  -- 20 squares per side (500/25)
         local totalSquares = squaresPerSide * 4  -- 80 squares total around the rectangle
@@ -105,7 +161,29 @@ function love.draw()
                 y = INITIAL_Y + 500 - ((position + 1) * 25)
             end
             
-            love.graphics.rectangle("fill", x, y, 25, 25)
+            if i == SCORE then
+                if side == 1 then
+                    love.graphics.draw(OurosHead, x + 25, y, math.rad(90), 25 / OurosHead:getWidth(), 25 / OurosHead:getHeight())
+                elseif side == 2 then
+                    love.graphics.draw(OurosHead, x + 25, y + 25, math.rad(180), 25 / OurosHead:getWidth(), 25 / OurosHead:getHeight())
+                elseif side == 3 then
+                    love.graphics.draw(OurosHead, x, y + 25, math.rad(270), 25 / OurosHead:getWidth(), 25 / OurosHead:getHeight())
+                else
+                    love.graphics.draw(OurosHead, x, y, 0, 25 / OurosHead:getWidth(), 25 / OurosHead:getHeight())
+                end
+            elseif i == 1 then
+                love.graphics.draw(OurosTail, x, y, 0, 25 / OurosTail:getWidth(), 25 / OurosTail:getHeight())
+            else
+                if side == 1 then
+                    love.graphics.draw(OurosBody, x + 25, y, math.rad(90), 25 / OurosBody:getWidth(), 25 / OurosBody:getHeight())
+                elseif side == 2 then
+                    love.graphics.draw(OurosBody, x + 25, y + 25, math.rad(180), 25 / OurosBody:getWidth(), 25 / OurosBody:getHeight())
+                elseif side == 3 then
+                    love.graphics.draw(OurosBody, x, y + 25, math.rad(270), 25 / OurosBody:getWidth(), 25 / OurosBody:getHeight())
+                else
+                    love.graphics.draw(OurosBody, x, y, 0, 25 / OurosBody:getWidth(), 25 / OurosBody:getHeight())
+                end
+            end
         end
     end
 end
