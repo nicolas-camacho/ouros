@@ -14,8 +14,8 @@ function love.load()
     INITIAL_Y = height / 2 - 300
 
     PLAYER = {
-        x = INITIAL_X,
-        y = INITIAL_Y,
+        x = INITIAL_X + 250,
+        y = INITIAL_Y + 250,
         width = 25,
         height = 25,
         speed = 200,
@@ -53,6 +53,25 @@ function love.load()
         sprite = love.graphics.newImage("assets/point.png")
     }
 
+    BULLET_1 = {
+        width = 5,
+        height = 5,
+        sprite = love.graphics.newImage("assets/bullet-1.png"),
+        type = 1,
+    }
+
+    ATTACK = {
+        x = 0,
+        y = 0,
+        width = 0,
+        height = 0,
+        timer = 0,
+        type = 1,
+        exists = false,
+        collided = false,
+        speed = 200,
+    }
+
     SCORE = 0
 end
 
@@ -60,6 +79,10 @@ function love.update(dt)
 
     if POINT.exists == false then
         POINT.timer = POINT.timer + 1
+    end
+
+    if ATTACK.exists == false then
+        ATTACK.timer = ATTACK.timer + 1
     end
 
     -- Reset animation state at the beginning of each frame
@@ -91,7 +114,7 @@ function love.update(dt)
         PLAYER.animation.speed = 0.1
     end
 
-    if POINT.exists == false and POINT.timer > 60 then
+    if POINT.exists == false and POINT.timer > 30 then
         POINT.x = math.random(INITIAL_X, INITIAL_X + 500 - POINT.width)
         POINT.y = math.random(INITIAL_Y, INITIAL_Y + 500 - POINT.height)
         POINT.exists = true
@@ -105,6 +128,36 @@ function love.update(dt)
         SCORE = SCORE + 1
         POINT.exists = false
         POINT.collided = true
+    end
+
+    if ATTACK.exists == false and ATTACK.timer > 60 then
+        if ATTACK.type == 1 then
+            ATTACK.x = INITIAL_X
+            ATTACK.y = INITIAL_Y
+            ATTACK.width = 250
+            ATTACK.height = 25
+        end
+
+        ATTACK.exists = true
+        ATTACK.timer = 0
+        ATTACK.collided = false
+    end
+
+    if ATTACK.exists == true then
+        ATTACK.y = ATTACK.y + ATTACK.speed * dt
+        if ATTACK.y > INITIAL_Y + 500 then
+            ATTACK.exists = false
+        end
+    end
+
+    CollideWithAttack = CollitionDetectionPlayer(ATTACK)
+
+    if CollideWithAttack == true and ATTACK.collided == false then
+        SCORE = SCORE - 1
+        ATTACK.exists = false
+        ATTACK.collided = true
+        PLAYER.x = INITIAL_X + 250
+        PLAYER.y = INITIAL_Y + 250
     end
 
     if PLAYER.animation.walk == true then
@@ -136,6 +189,12 @@ function love.draw()
     -- Points
     if POINT.exists == true then
         love.graphics.draw(POINT.sprite, POINT.x, POINT.y, 0, 25 / POINT.sprite:getWidth(), 25 / POINT.sprite:getHeight())
+    end
+    -- Attack
+    if ATTACK.exists == true then
+        for i = 1, 8 do
+            love.graphics.draw(BULLET_1.sprite, ATTACK.x + ((i - 1) * 30), ATTACK.y, 0, 25 / BULLET_1.sprite:getWidth(), 25 / BULLET_1.sprite:getHeight())
+        end
     end
     -- Ouros movement
     for i = 1, SCORE do
