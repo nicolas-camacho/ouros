@@ -34,4 +34,10 @@ function StateManager:draw()
     end
 end
 
+function StateManager:keypressed(key)
+    if StateManager.currentState and StateManager.currentState.keypressed then
+        StateManager.currentState:keypressed(key)
+    end
+end
+
 return StateManager

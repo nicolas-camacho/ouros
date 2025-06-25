@@ -6,28 +6,6 @@ function MainMenuState:load()
 end
 
 function MainMenuState:update(dt)
-    if love.keyboard.isDown("up") then
-        if MainMenuState.selectedOption > 1 then
-            MainMenuState.selectedOption = MainMenuState.selectedOption - 1
-        else
-            MainMenuState.selectedOption = #MainMenuState.options
-        end
-    elseif love.keyboard.isDown("down") then
-        if MainMenuState.selectedOption < #MainMenuState.options then
-            MainMenuState.selectedOption = MainMenuState.selectedOption + 1
-        else
-            MainMenuState.selectedOption = 1
-        end
-    end
-
-    if love.keyboard.isDown("return") then
-        if MainMenuState.selectedOption == 1 then
-            local GameState = require("states.GameState")
-            require("StateManager"):changeState(GameState)
-        elseif MainMenuState.selectedOption == 2 then
-            love.event.quit()
-        end
-    end
 end
 
 function MainMenuState:draw()
@@ -47,6 +25,31 @@ end
 
 function MainMenuState:exit(nextState)
     print("MainMenuState:exit", nextState.name)
+end
+
+function MainMenuState:keypressed(key)
+    if key == "up" then
+        if MainMenuState.selectedOption > 1 then
+            MainMenuState.selectedOption = MainMenuState.selectedOption - 1
+        else
+            MainMenuState.selectedOption = #MainMenuState.options
+        end
+    elseif key == "down" then
+        if MainMenuState.selectedOption < #MainMenuState.options then
+            MainMenuState.selectedOption = MainMenuState.selectedOption + 1
+        else
+            MainMenuState.selectedOption = 1
+        end
+    end
+
+    if key == "return" then
+        if MainMenuState.selectedOption == 1 then
+            local GameState = require("states.GameState")
+            require("StateManager"):changeState(GameState)
+        elseif MainMenuState.selectedOption == 2 then
+            love.event.quit()
+        end
+    end
 end
 
 MainMenuState.name = "MainMenuState"

@@ -15,3 +15,9 @@ end
 function love.draw()
     StateManager:draw()
 end
+
+function love.keypressed(key)
+    if StateManager.keypressed then
+        StateManager:keypressed(key)
+    end
+end
