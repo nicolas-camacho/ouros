@@ -9,13 +9,19 @@ function MainMenuState:update(dt)
 end
 
 function MainMenuState:draw()
+    love.graphics.print("OUROS", WIDTH / 2 - 120, HEIGHT / 2 - 100, 0, 3, 3)
     for i, option in ipairs(MainMenuState.options) do
         if i == MainMenuState.selectedOption then
-            love.graphics.setColor(0.5, 0.5, 0.5)
+            love.graphics.print({
+                {1, 1, 1, 1},
+                option
+            }, WIDTH / 2 - 120, HEIGHT / 2 - 100 + (i - 1) * 20 + 100)
         else
-            love.graphics.setColor(1, 1, 1)
+            love.graphics.print({
+                {0.5, 0.5, 0.5, 1},
+                option
+            }, WIDTH / 2 - 120, HEIGHT / 2 - 100 + (i - 1) * 20 + 100)
         end
-        love.graphics.print(option, 100, 100 + (i - 1) * 20)
     end
 end
 

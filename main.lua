@@ -3,7 +3,13 @@ local StateManager = require("StateManager")
 local MainMenuState = require("states.MainMenuState")
 
 function love.load()
+    local width = love.graphics.getWidth()
+    local height = love.graphics.getHeight()
+    WIDTH = width
+    HEIGHT = height
     love.graphics.setDefaultFilter("nearest", "nearest")
+    Font =love.graphics.newFont("assets/Precise-M.ttf", 16)
+    love.graphics.setFont(Font)
     StateManager:init()
     StateManager:changeState(MainMenuState)
 end

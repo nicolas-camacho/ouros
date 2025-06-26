@@ -52,11 +52,8 @@ function CollitionDetectionPlayer(collider)
 end
 
 function GameState:load()
-    local width = love.graphics.getWidth()
-    local height = love.graphics.getHeight()
-
-    INITIAL_X = width / 2 - 250
-    INITIAL_Y = height / 2 - 300
+    INITIAL_X = WIDTH / 2 - 250
+    INITIAL_Y = HEIGHT / 2 - 300
     -- Ouros
     OurosHead = love.graphics.newImage("assets/ouros-head-simple.png")
     OurosBody = love.graphics.newImage("assets/ouros-body-simple.png")
