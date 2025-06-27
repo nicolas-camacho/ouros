@@ -1,4 +1,5 @@
 local Attacks = require("resources.Attacks")
+local Phrases = require("resources.Phrases")
 
 function RandomAttack()
     local random = math.random(1, #Attacks)
@@ -18,6 +19,7 @@ local GameScene = {
         quad_width = 8,
         quad_height = 8,
         quads = {},
+        lives = 3,
         animation = {
             walk = false,
             frame = 1,
@@ -46,7 +48,12 @@ local GameScene = {
         speed = 240,
         movement = "vertical"
     },
-    SCORE = 0
+    SCORE = 0,
+    PHRASE = {
+        exists = false,
+        phrase = "",
+        timer = 0
+    }
 }
 
 function CollitionDetectionPlayer(collider)
@@ -64,7 +71,8 @@ function GameScene:load()
     OurosHead = love.graphics.newImage("assets/ouros-head-simple.png")
     OurosBody = love.graphics.newImage("assets/ouros-body-simple.png")
     OurosTail = love.graphics.newImage("assets/ouros-tail-simple.png")
-
+    -- Heart
+    Heart = love.graphics.newImage("assets/heart.png")
     -- Player
     GameScene.PLAYER.x = INITIAL_X + 250
     GameScene.PLAYER.y = INITIAL_Y + 250
@@ -88,6 +96,29 @@ function GameScene:load()
 end
 
 function GameScene:update(dt)
+    if GameScene.PLAYER.lives == 0 then
+        local GameOverScene = require("scenes.GameOverScene")
+        require("SceneManager"):changeState(GameOverScene)
+    end
+
+    if GameScene.SCORE > 0 then
+        for i = 1, #Phrases do
+            if GameScene.SCORE == Phrases[i].points then
+                GameScene.PHRASE.phrase = Phrases[i].phrase
+                GameScene.PHRASE.exists = true
+                GameScene.PHRASE.timer = 0
+                break
+            end
+        end
+    end
+
+    if GameScene.PHRASE.exists == true then
+        GameScene.PHRASE.timer = GameScene.PHRASE.timer + 1
+        if GameScene.PHRASE.timer > 120 then
+            GameScene.PHRASE.exists = false
+        end
+    end
+
     if GameScene.POINT.exists == false then
         GameScene.POINT.timer = GameScene.POINT.timer + 1
     end
@@ -189,8 +220,8 @@ function GameScene:update(dt)
     CollideWithAttack = CollitionDetectionPlayer(GameScene.ATTACK)
 
     if CollideWithAttack == true and GameScene.ATTACK.collided == false then
-        if GameScene.SCORE > 0 then
-            GameScene.SCORE = GameScene.SCORE - 1
+        if GameScene.PLAYER.lives > 0 then
+            GameScene.PLAYER.lives = GameScene.PLAYER.lives - 1
         end
         GameScene.ATTACK.exists = false
         GameScene.ATTACK.collided = true
@@ -223,8 +254,16 @@ function GameScene:draw()
         500,
         500
     )
+    -- Phrase
+    if GameScene.PHRASE.exists == true then
+        love.graphics.print(GameScene.PHRASE.phrase, INITIAL_X, INITIAL_Y + 500 + 50, 0, 1, 1)
+    end
     -- Player
     love.graphics.draw(GameScene.PLAYER.sprite, GameScene.PLAYER.quads[GameScene.PLAYER.animation.frame], GameScene.PLAYER.x, GameScene.PLAYER.y, 0, 25 / GameScene.PLAYER.quad_width, 25 / GameScene.PLAYER.quad_height)
+    -- Lives
+    for i = 1, GameScene.PLAYER.lives do
+        love.graphics.draw(Heart, INITIAL_X - 70, INITIAL_Y + ((i -1) * 25), 0, 16 / Heart:getWidth(), 16 / Heart:getHeight())
+    end
     -- Points
     if GameScene.POINT.exists == true then
         love.graphics.draw(GameScene.POINT.sprite, GameScene.POINT.x, GameScene.POINT.y, 0, 25 / GameScene.POINT.sprite:getWidth(), 25 / GameScene.POINT.sprite:getHeight())
@@ -300,6 +339,20 @@ function GameScene:enter(message)
 end
 
 function GameScene:exit(nextState)
+    if nextState.name == "GameOverScene" then
+        GameScene.PLAYER.lives = 3
+        GameScene.SCORE = 0
+        GameScene.ATTACK.exists = false
+        GameScene.POINT.exists = false
+        GameScene.POINT.collided = false
+        GameScene.POINT.timer = 0
+        GameScene.ATTACK.timer = 0
+        GameScene.ATTACK.type = RandomAttack().type
+        GameScene.ATTACK.collided = false
+        GameScene.PHRASE.exists = false
+        GameScene.PHRASE.phrase = ""
+        GameScene.PHRASE.timer = 0
+    end
     print("Saliendo de GameScene hacia:", nextState.name or "un estado sin nombre")
 end
 
