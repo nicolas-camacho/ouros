@@ -189,11 +189,14 @@ function GameScene:update(dt)
     CollideWithAttack = CollitionDetectionPlayer(GameScene.ATTACK)
 
     if CollideWithAttack == true and GameScene.ATTACK.collided == false then
-        GameScene.SCORE = GameScene.SCORE - 1
+        if GameScene.SCORE > 0 then
+            GameScene.SCORE = GameScene.SCORE - 1
+        end
         GameScene.ATTACK.exists = false
         GameScene.ATTACK.collided = true
         GameScene.PLAYER.x = INITIAL_X + 250
         GameScene.PLAYER.y = INITIAL_Y + 250
+        GameScene.ATTACK.type = RandomAttack().type
     end
 
     if GameScene.PLAYER.animation.walk == true then
