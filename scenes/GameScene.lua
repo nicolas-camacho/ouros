@@ -6,13 +6,21 @@ function RandomAttack()
     return Attacks[random]
 end
 
+function DebugHitbox(hitbox)
+    -- Hitbox (líneas rojas)
+    local r, g, b, a = love.graphics.getColor()  -- Guardar color actual
+    love.graphics.setColor(1, 0, 0, 1)  -- Color rojo
+    love.graphics.rectangle("line", hitbox.x, hitbox.y, hitbox.width, hitbox.height)
+    love.graphics.setColor(r, g, b, a)  -- Restaurar color original
+end
+
 local GameScene = {
     PLAYER = {
         x = 0,
         y = 0,
         width = 25,
         height = 25,
-        speed = 200,
+        speed = 220,
         sprite = love.graphics.newImage("assets/player.png"),
         sprite_width = 32,
         sprite_height = 8,
@@ -45,8 +53,14 @@ local GameScene = {
         type = RandomAttack().type,
         exists = false,
         collided = false,
-        speed = 240,
-        movement = "vertical"
+        speed = 250,
+        movement = "vertical",
+        hitbox = {
+            x = 0,
+            y = 0,
+            width = 0,
+            height = 0
+        }
     },
     SCORE = 0,
     PHRASE = {
@@ -88,8 +102,8 @@ function GameScene:load()
     end
 
     BULLET_1 = {
-        width = 5,
-        height = 5,
+        width = 1,
+        height = 1,
         sprite = love.graphics.newImage("assets/bullet-1.png"),
         type = 1,
     }
@@ -156,7 +170,7 @@ function GameScene:update(dt)
         GameScene.PLAYER.animation.speed = 0.1
     end
 
-    if GameScene.POINT.exists == false and GameScene.POINT.timer > 30 then
+    if GameScene.POINT.exists == false and GameScene.POINT.timer > 20 then
         GameScene.POINT.x = math.random(INITIAL_X, INITIAL_X + 500 - GameScene.POINT.width)
         GameScene.POINT.y = math.random(INITIAL_Y, INITIAL_Y + 500 - GameScene.POINT.height)
         GameScene.POINT.exists = true
@@ -180,6 +194,10 @@ function GameScene:update(dt)
                 GameScene.ATTACK.width = Attacks[i].width
                 GameScene.ATTACK.height = Attacks[i].height
                 GameScene.ATTACK.movement = Attacks[i].movement
+                GameScene.ATTACK.hitbox.x = Attacks[i].x + 5
+                GameScene.ATTACK.hitbox.y = Attacks[i].y + 5
+                GameScene.ATTACK.hitbox.width = Attacks[i].width - 10
+                GameScene.ATTACK.hitbox.height = Attacks[i].height - 10
                 break
             end
         end
@@ -192,24 +210,28 @@ function GameScene:update(dt)
     if GameScene.ATTACK.exists == true then
         if GameScene.ATTACK.movement == "vertical" then
             GameScene.ATTACK.y = GameScene.ATTACK.y + GameScene.ATTACK.speed * dt
+            GameScene.ATTACK.hitbox.y = GameScene.ATTACK.hitbox.y + GameScene.ATTACK.speed * dt
             if GameScene.ATTACK.y > INITIAL_Y + 500 then
                 GameScene.ATTACK.exists = false
                 GameScene.ATTACK.type = RandomAttack().type
             end
         elseif GameScene.ATTACK.movement == "horizontal" then
             GameScene.ATTACK.x = GameScene.ATTACK.x + GameScene.ATTACK.speed * dt
+            GameScene.ATTACK.hitbox.x = GameScene.ATTACK.hitbox.x + GameScene.ATTACK.speed * dt
             if GameScene.ATTACK.x > INITIAL_X + 500 then
                 GameScene.ATTACK.exists = false
                 GameScene.ATTACK.type = RandomAttack().type
             end
         elseif GameScene.ATTACK.movement == "vertical-reverse" then
             GameScene.ATTACK.y = GameScene.ATTACK.y - GameScene.ATTACK.speed * dt
+            GameScene.ATTACK.hitbox.y = GameScene.ATTACK.hitbox.y - GameScene.ATTACK.speed * dt
             if GameScene.ATTACK.y < INITIAL_Y then
                 GameScene.ATTACK.exists = false
                 GameScene.ATTACK.type = RandomAttack().type
             end
         elseif GameScene.ATTACK.movement == "horizontal-reverse" then
             GameScene.ATTACK.x = GameScene.ATTACK.x - GameScene.ATTACK.speed * dt
+            GameScene.ATTACK.hitbox.x = GameScene.ATTACK.hitbox.x - GameScene.ATTACK.speed * dt
             if GameScene.ATTACK.x < INITIAL_X then
                 GameScene.ATTACK.exists = false
                 GameScene.ATTACK.type = RandomAttack().type
@@ -217,7 +239,7 @@ function GameScene:update(dt)
         end
     end
 
-    CollideWithAttack = CollitionDetectionPlayer(GameScene.ATTACK)
+    CollideWithAttack = CollitionDetectionPlayer(GameScene.ATTACK.hitbox)
 
     if CollideWithAttack == true and GameScene.ATTACK.collided == false then
         if GameScene.PLAYER.lives > 0 then
@@ -270,18 +292,57 @@ function GameScene:draw()
     end
     -- Attack
     if GameScene.ATTACK.exists == true then
+        local originX = BULLET_1.sprite:getWidth()/2
+        local originY = BULLET_1.sprite:getHeight()/2
+        local positionX = GameScene.ATTACK.x + originX
+        local positionY = GameScene.ATTACK.y + originY
         for i = 1, 10 do
             if GameScene.ATTACK.movement == "vertical" then
-                love.graphics.draw(BULLET_1.sprite, GameScene.ATTACK.x + ((i - 1) * 30), GameScene.ATTACK.y, 0, 25 / BULLET_1.sprite:getWidth(), 25 / BULLET_1.sprite:getHeight())
+                love.graphics.draw(
+                    BULLET_1.sprite,
+                    GameScene.ATTACK.x + ((i - 1) * 25),
+                    GameScene.ATTACK.y,
+                    0,
+                    1,
+                    1
+                )
             elseif GameScene.ATTACK.movement == "horizontal" then
-                love.graphics.draw(BULLET_1.sprite, GameScene.ATTACK.x, GameScene.ATTACK.y + ((i - 1) * 30), math.rad(270), 25 / BULLET_1.sprite:getWidth(), 25 / BULLET_1.sprite:getHeight())
+                love.graphics.draw(
+                    BULLET_1.sprite,
+                    positionX,
+                    positionY + ((i - 1) * 25),
+                    math.rad(270),
+                    1,
+                    1,
+                    originX,
+                    originY
+                )
             elseif GameScene.ATTACK.movement == "vertical-reverse" then
-                love.graphics.draw(BULLET_1.sprite, GameScene.ATTACK.x + ((i - 1) * 30), GameScene.ATTACK.y, math.rad(180), 25 / BULLET_1.sprite:getWidth(), 25 / BULLET_1.sprite:getHeight())
+                love.graphics.draw(
+                    BULLET_1.sprite,
+                    positionX + ((i - 1) * 25),
+                    positionY,
+                    math.rad(180),
+                    1,
+                    1,
+                    originX,
+                    originY
+                )
             elseif GameScene.ATTACK.movement == "horizontal-reverse" then
-                love.graphics.draw(BULLET_1.sprite, GameScene.ATTACK.x, GameScene.ATTACK.y + ((i - 1) * 30), math.rad(90), 25 / BULLET_1.sprite:getWidth(), 25 / BULLET_1.sprite:getHeight())
+                love.graphics.draw(
+                    BULLET_1.sprite,
+                    positionX,
+                    positionY + ((i - 1) * 25),
+                    math.rad(90),
+                    1,
+                    1,
+                    originX,
+                    originY
+                )
             end
         end
-    end
+        --DebugHitbox(GameScene.ATTACK.hitbox)
+    end 
     -- Ouros movement
     for i = 1, GameScene.SCORE do
         local squaresPerSide = math.floor(500 / 25) + 1  -- 20 squares per side (500/25)
