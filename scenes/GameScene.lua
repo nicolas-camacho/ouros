@@ -32,7 +32,13 @@ local GameScene = {
             walk = false,
             frame = 1,
             speed = 0.1
-        }
+        },
+        hitbox = {
+            x = 0,
+            y = 0,
+            width = 20,
+            height = 20
+        },
     },
     POINT = {
         x = 0,
@@ -76,10 +82,10 @@ local GameScene = {
 }
 
 function CollitionDetectionPlayer(collider)
-    if GameScene.PLAYER.x < collider.x + collider.width and
-        GameScene.PLAYER.x + GameScene.PLAYER.width > collider.x and
-        GameScene.PLAYER.y < collider.y + collider.height and
-        GameScene.PLAYER.y + GameScene.PLAYER.height > collider.y then
+    if GameScene.PLAYER.hitbox.x < collider.x + collider.width and
+        GameScene.PLAYER.hitbox.x + GameScene.PLAYER.hitbox.width > collider.x and
+        GameScene.PLAYER.hitbox.y < collider.y + collider.height and
+        GameScene.PLAYER.hitbox.y + GameScene.PLAYER.hitbox.height > collider.y then
         return true
     end
     return false
@@ -93,6 +99,8 @@ function GameScene:load()
     -- Heart
     Heart = love.graphics.newImage("assets/heart.png")
     -- Player
+    GameScene.PLAYER.hitbox.x = INITIAL_X + 250 + 2.5
+    GameScene.PLAYER.hitbox.y = INITIAL_Y + 250 + 2.5
     GameScene.PLAYER.x = INITIAL_X + 250
     GameScene.PLAYER.y = INITIAL_Y + 250
     -- Signal
@@ -152,21 +160,25 @@ function GameScene:update(dt)
     GameScene.PLAYER.animation.walk = false
 
     if love.keyboard.isDown("up") and GameScene.PLAYER.y > INITIAL_Y then
+        GameScene.PLAYER.hitbox.y = GameScene.PLAYER.hitbox.y - GameScene.PLAYER.speed * dt
         GameScene.PLAYER.y = GameScene.PLAYER.y - GameScene.PLAYER.speed * dt
         GameScene.PLAYER.animation.walk = true
     end
 
     if love.keyboard.isDown("down") and GameScene.PLAYER.y < INITIAL_Y + (500 - GameScene.PLAYER.height) then
+        GameScene.PLAYER.hitbox.y = GameScene.PLAYER.hitbox.y + GameScene.PLAYER.speed * dt
         GameScene.PLAYER.y = GameScene.PLAYER.y + GameScene.PLAYER.speed * dt
         GameScene.PLAYER.animation.walk = true
     end
 
     if love.keyboard.isDown("left") and GameScene.PLAYER.x > INITIAL_X then
+        GameScene.PLAYER.hitbox.x = GameScene.PLAYER.hitbox.x - GameScene.PLAYER.speed * dt
         GameScene.PLAYER.x = GameScene.PLAYER.x - GameScene.PLAYER.speed * dt
         GameScene.PLAYER.animation.walk = true
     end
 
     if love.keyboard.isDown("right") and GameScene.PLAYER.x < INITIAL_X + (500 - GameScene.PLAYER.width) then
+        GameScene.PLAYER.hitbox.x = GameScene.PLAYER.hitbox.x + GameScene.PLAYER.speed * dt
         GameScene.PLAYER.x = GameScene.PLAYER.x + GameScene.PLAYER.speed * dt
         GameScene.PLAYER.animation.walk = true
     end
@@ -225,29 +237,29 @@ function GameScene:update(dt)
 
     if GameScene.ATTACK.exists == true then
         if GameScene.ATTACK.movement == "vertical" then
-            GameScene.ATTACK.y = GameScene.ATTACK.y + GameScene.ATTACK.speed * dt
             GameScene.ATTACK.hitbox.y = GameScene.ATTACK.hitbox.y + GameScene.ATTACK.speed * dt
+            GameScene.ATTACK.y = GameScene.ATTACK.y + GameScene.ATTACK.speed * dt
             if GameScene.ATTACK.y > INITIAL_Y + 500 then
                 GameScene.ATTACK.exists = false
                 GameScene.ATTACK.type = RandomAttack().type
             end
         elseif GameScene.ATTACK.movement == "horizontal" then
-            GameScene.ATTACK.x = GameScene.ATTACK.x + GameScene.ATTACK.speed * dt
             GameScene.ATTACK.hitbox.x = GameScene.ATTACK.hitbox.x + GameScene.ATTACK.speed * dt
+            GameScene.ATTACK.x = GameScene.ATTACK.x + GameScene.ATTACK.speed * dt
             if GameScene.ATTACK.x > INITIAL_X + 500 then
                 GameScene.ATTACK.exists = false
                 GameScene.ATTACK.type = RandomAttack().type
             end
         elseif GameScene.ATTACK.movement == "vertical-reverse" then
-            GameScene.ATTACK.y = GameScene.ATTACK.y - GameScene.ATTACK.speed * dt
             GameScene.ATTACK.hitbox.y = GameScene.ATTACK.hitbox.y - GameScene.ATTACK.speed * dt
+            GameScene.ATTACK.y = GameScene.ATTACK.y - GameScene.ATTACK.speed * dt
             if GameScene.ATTACK.y < INITIAL_Y then
                 GameScene.ATTACK.exists = false
                 GameScene.ATTACK.type = RandomAttack().type
             end
         elseif GameScene.ATTACK.movement == "horizontal-reverse" then
-            GameScene.ATTACK.x = GameScene.ATTACK.x - GameScene.ATTACK.speed * dt
             GameScene.ATTACK.hitbox.x = GameScene.ATTACK.hitbox.x - GameScene.ATTACK.speed * dt
+            GameScene.ATTACK.x = GameScene.ATTACK.x - GameScene.ATTACK.speed * dt
             if GameScene.ATTACK.x < INITIAL_X then
                 GameScene.ATTACK.exists = false
                 GameScene.ATTACK.type = RandomAttack().type
@@ -265,6 +277,8 @@ function GameScene:update(dt)
         GameScene.ATTACK.collided = true
         GameScene.PLAYER.x = INITIAL_X + 250
         GameScene.PLAYER.y = INITIAL_Y + 250
+        GameScene.PLAYER.hitbox.x = INITIAL_X + 250 + 2.5
+        GameScene.PLAYER.hitbox.y = INITIAL_Y + 250 + 2.5
         GameScene.ATTACK.type = RandomAttack().type
     end
 
@@ -402,6 +416,7 @@ function GameScene:draw()
         end
         --DebugHitbox(GameScene.ATTACK.hitbox)
     end
+    --DebugHitbox(GameScene.PLAYER.hitbox)
     -- Ouros movement
     for i = 1, GameScene.SCORE do
         local squaresPerSide = math.floor(500 / 25) + 1 -- 20 squares per side (500/25)
