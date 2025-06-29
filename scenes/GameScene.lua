@@ -60,6 +60,11 @@ local GameScene = {
             y = 0,
             width = 0,
             height = 0
+        },
+        signal = {
+            exists = false,
+            x = 0,
+            y = 0,
         }
     },
     SCORE = 0,
@@ -90,6 +95,8 @@ function GameScene:load()
     -- Player
     GameScene.PLAYER.x = INITIAL_X + 250
     GameScene.PLAYER.y = INITIAL_Y + 250
+    -- Signal
+    Signal = love.graphics.newImage("assets/signal.png")
 
     for i = 1, 4 do
         GameScene.PLAYER.quads[i] = love.graphics.newQuad(
@@ -186,9 +193,12 @@ function GameScene:update(dt)
         GameScene.POINT.collided = true
     end
 
-    if GameScene.ATTACK.exists == false and GameScene.ATTACK.timer > 60 then
+    if GameScene.ATTACK.exists == false and GameScene.ATTACK.timer > 45 and GameScene.ATTACK.signal.exists == false then
         for i = 1, #Attacks do
             if Attacks[i].type == GameScene.ATTACK.type then
+                GameScene.ATTACK.signal.exists = true
+                GameScene.ATTACK.signal.x = Attacks[i].x
+                GameScene.ATTACK.signal.y = Attacks[i].y
                 GameScene.ATTACK.x = Attacks[i].x
                 GameScene.ATTACK.y = Attacks[i].y
                 GameScene.ATTACK.width = Attacks[i].width
@@ -201,7 +211,13 @@ function GameScene:update(dt)
                 break
             end
         end
+    end
 
+    if GameScene.ATTACK.signal.exists == true and GameScene.ATTACK.timer > 75 then
+        GameScene.ATTACK.signal.exists = false
+    end
+
+    if GameScene.ATTACK.exists == false and GameScene.ATTACK.timer > 80 then
         GameScene.ATTACK.exists = true
         GameScene.ATTACK.timer = 0
         GameScene.ATTACK.collided = false
@@ -291,6 +307,17 @@ function GameScene:draw()
         love.graphics.draw(GameScene.POINT.sprite, GameScene.POINT.x, GameScene.POINT.y, 0, 25 / GameScene.POINT.sprite:getWidth(), 25 / GameScene.POINT.sprite:getHeight())
     end
     -- Attack
+    if GameScene.ATTACK.signal.exists == true then
+        love.graphics.draw(
+            Signal,
+            GameScene.ATTACK.signal.x,
+            GameScene.ATTACK.signal.y,
+            0,
+            25/Signal:getWidth(),
+            25/Signal:getHeight()
+        )
+    end
+
     if GameScene.ATTACK.exists == true then
         local originX = BULLET_1.sprite:getWidth()/2
         local originY = BULLET_1.sprite:getHeight()/2
