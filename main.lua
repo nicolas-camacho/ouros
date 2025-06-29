@@ -1,4 +1,4 @@
-love = require("love")
+_G.love = require("love")
 local SceneManager = require("SceneManager")
 local MainMenuScene = require("scenes.MainMenuScene")
 
@@ -10,7 +10,7 @@ function love.load()
     INITIAL_X = WIDTH / 2 - 250
     INITIAL_Y = HEIGHT / 2 - 300
     love.graphics.setDefaultFilter("nearest", "nearest")
-    Font =love.graphics.newFont("assets/Precise-M.ttf", 16)
+    Font = love.graphics.newFont("assets/Precise-M.ttf", 16)
     love.graphics.setFont(Font)
     SceneManager:init()
     SceneManager:changeState(MainMenuScene)

@@ -8,10 +8,10 @@ end
 
 function DebugHitbox(hitbox)
     -- Hitbox (líneas rojas)
-    local r, g, b, a = love.graphics.getColor()  -- Guardar color actual
-    love.graphics.setColor(1, 0, 0, 1)  -- Color rojo
+    local r, g, b, a = love.graphics.getColor() -- Guardar color actual
+    love.graphics.setColor(1, 0, 0, 1)          -- Color rojo
     love.graphics.rectangle("line", hitbox.x, hitbox.y, hitbox.width, hitbox.height)
-    love.graphics.setColor(r, g, b, a)  -- Restaurar color original
+    love.graphics.setColor(r, g, b, a)          -- Restaurar color original
 end
 
 local GameScene = {
@@ -53,7 +53,7 @@ local GameScene = {
         type = RandomAttack().type,
         exists = false,
         collided = false,
-        speed = 250,
+        speed = 260,
         movement = "vertical",
         hitbox = {
             x = 0,
@@ -297,30 +297,62 @@ function GameScene:draw()
         love.graphics.print(GameScene.PHRASE.phrase, INITIAL_X, INITIAL_Y + 500 + 50, 0, 1, 1)
     end
     -- Player
-    love.graphics.draw(GameScene.PLAYER.sprite, GameScene.PLAYER.quads[GameScene.PLAYER.animation.frame], GameScene.PLAYER.x, GameScene.PLAYER.y, 0, 25 / GameScene.PLAYER.quad_width, 25 / GameScene.PLAYER.quad_height)
+    love.graphics.draw(GameScene.PLAYER.sprite, GameScene.PLAYER.quads[GameScene.PLAYER.animation.frame],
+        GameScene.PLAYER.x, GameScene.PLAYER.y, 0, 25 / GameScene.PLAYER.quad_width, 25 / GameScene.PLAYER.quad_height)
     -- Lives
     for i = 1, GameScene.PLAYER.lives do
-        love.graphics.draw(Heart, INITIAL_X - 70, INITIAL_Y + ((i -1) * 25), 0, 16 / Heart:getWidth(), 16 / Heart:getHeight())
+        love.graphics.draw(Heart, INITIAL_X - 70, INITIAL_Y + ((i - 1) * 25), 0, 16 / Heart:getWidth(),
+            16 / Heart:getHeight())
     end
     -- Points
     if GameScene.POINT.exists == true then
-        love.graphics.draw(GameScene.POINT.sprite, GameScene.POINT.x, GameScene.POINT.y, 0, 25 / GameScene.POINT.sprite:getWidth(), 25 / GameScene.POINT.sprite:getHeight())
+        love.graphics.draw(GameScene.POINT.sprite, GameScene.POINT.x, GameScene.POINT.y, 0,
+            25 / GameScene.POINT.sprite:getWidth(), 25 / GameScene.POINT.sprite:getHeight())
     end
     -- Attack
     if GameScene.ATTACK.signal.exists == true then
-        love.graphics.draw(
-            Signal,
-            GameScene.ATTACK.signal.x,
-            GameScene.ATTACK.signal.y,
-            0,
-            25/Signal:getWidth(),
-            25/Signal:getHeight()
-        )
+        if GameScene.ATTACK.movement == "vertical" then
+            love.graphics.draw(
+                Signal,
+                GameScene.ATTACK.signal.x + GameScene.ATTACK.width / 2,
+                GameScene.ATTACK.signal.y,
+                0,
+                25 / Signal:getWidth(),
+                25 / Signal:getHeight()
+            )
+        elseif GameScene.ATTACK.movement == "horizontal" then
+            love.graphics.draw(
+                Signal,
+                GameScene.ATTACK.signal.x,
+                GameScene.ATTACK.signal.y + GameScene.ATTACK.height / 2,
+                0,
+                25 / Signal:getWidth(),
+                25 / Signal:getHeight()
+            )
+        elseif GameScene.ATTACK.movement == "vertical-reverse" then
+            love.graphics.draw(
+                Signal,
+                GameScene.ATTACK.signal.x + GameScene.ATTACK.width / 2,
+                GameScene.ATTACK.signal.y - 25,
+                0,
+                25 / Signal:getWidth(),
+                25 / Signal:getHeight()
+            )
+        elseif GameScene.ATTACK.movement == "horizontal-reverse" then
+            love.graphics.draw(
+                Signal,
+                GameScene.ATTACK.signal.x - 25,
+                GameScene.ATTACK.signal.y + GameScene.ATTACK.height / 2,
+                0,
+                25 / Signal:getWidth(),
+                25 / Signal:getHeight()
+            )
+        end
     end
 
     if GameScene.ATTACK.exists == true then
-        local originX = BULLET_1.sprite:getWidth()/2
-        local originY = BULLET_1.sprite:getHeight()/2
+        local originX = BULLET_1.sprite:getWidth() / 2
+        local originY = BULLET_1.sprite:getHeight() / 2
         local positionX = GameScene.ATTACK.x + originX
         local positionY = GameScene.ATTACK.y + originY
         for i = 1, 10 do
@@ -369,38 +401,41 @@ function GameScene:draw()
             end
         end
         --DebugHitbox(GameScene.ATTACK.hitbox)
-    end 
+    end
     -- Ouros movement
     for i = 1, GameScene.SCORE do
-        local squaresPerSide = math.floor(500 / 25) + 1  -- 20 squares per side (500/25)
-        local totalSquares = squaresPerSide * 4  -- 80 squares total around the rectangle
-        
+        local squaresPerSide = math.floor(500 / 25) + 1 -- 20 squares per side (500/25)
+        local totalSquares = squaresPerSide * 4         -- 80 squares total around the rectangle
+
         if i <= totalSquares then
-            local side = math.floor((i - 1) / squaresPerSide)  -- 0=top, 1=right, 2=bottom, 3=left
-            local position = (i - 1) % squaresPerSide  -- Position on current side
-            
+            local side = math.floor((i - 1) / squaresPerSide) -- 0=top, 1=right, 2=bottom, 3=left
+            local position = (i - 1) % squaresPerSide         -- Position on current side
+
             local x, y
-            if side == 0 then  -- Top side
+            if side == 0 then -- Top side
                 x = INITIAL_X + (position * 25)
                 y = INITIAL_Y - 25
-            elseif side == 1 then  -- Right side
+            elseif side == 1 then -- Right side
                 x = INITIAL_X + 500
                 y = INITIAL_Y + (position * 25)
-            elseif side == 2 then  -- Bottom side
+            elseif side == 2 then -- Bottom side
                 x = INITIAL_X + 500 - ((position + 1) * 25)
                 y = INITIAL_Y + 500
-            else  -- Left side
+            else -- Left side
                 x = INITIAL_X - 25
                 y = INITIAL_Y + 500 - ((position + 1) * 25)
             end
-            
+
             if i == GameScene.SCORE then
                 if side == 1 then
-                    love.graphics.draw(OurosHead, x + 25, y, math.rad(90), 25 / OurosHead:getWidth(), 25 / OurosHead:getHeight())
+                    love.graphics.draw(OurosHead, x + 25, y, math.rad(90), 25 / OurosHead:getWidth(),
+                        25 / OurosHead:getHeight())
                 elseif side == 2 then
-                    love.graphics.draw(OurosHead, x + 25, y + 25, math.rad(180), 25 / OurosHead:getWidth(), 25 / OurosHead:getHeight())
+                    love.graphics.draw(OurosHead, x + 25, y + 25, math.rad(180), 25 / OurosHead:getWidth(),
+                        25 / OurosHead:getHeight())
                 elseif side == 3 then
-                    love.graphics.draw(OurosHead, x, y + 25, math.rad(270), 25 / OurosHead:getWidth(), 25 / OurosHead:getHeight())
+                    love.graphics.draw(OurosHead, x, y + 25, math.rad(270), 25 / OurosHead:getWidth(),
+                        25 / OurosHead:getHeight())
                 else
                     love.graphics.draw(OurosHead, x, y, 0, 25 / OurosHead:getWidth(), 25 / OurosHead:getHeight())
                 end
@@ -408,11 +443,14 @@ function GameScene:draw()
                 love.graphics.draw(OurosTail, x, y, 0, 25 / OurosTail:getWidth(), 25 / OurosTail:getHeight())
             else
                 if side == 1 then
-                    love.graphics.draw(OurosBody, x + 25, y, math.rad(90), 25 / OurosBody:getWidth(), 25 / OurosBody:getHeight())
+                    love.graphics.draw(OurosBody, x + 25, y, math.rad(90), 25 / OurosBody:getWidth(),
+                        25 / OurosBody:getHeight())
                 elseif side == 2 then
-                    love.graphics.draw(OurosBody, x + 25, y + 25, math.rad(180), 25 / OurosBody:getWidth(), 25 / OurosBody:getHeight())
+                    love.graphics.draw(OurosBody, x + 25, y + 25, math.rad(180), 25 / OurosBody:getWidth(),
+                        25 / OurosBody:getHeight())
                 elseif side == 3 then
-                    love.graphics.draw(OurosBody, x, y + 25, math.rad(270), 25 / OurosBody:getWidth(), 25 / OurosBody:getHeight())
+                    love.graphics.draw(OurosBody, x, y + 25, math.rad(270), 25 / OurosBody:getWidth(),
+                        25 / OurosBody:getHeight())
                 else
                     love.graphics.draw(OurosBody, x, y, 0, 25 / OurosBody:getWidth(), 25 / OurosBody:getHeight())
                 end
