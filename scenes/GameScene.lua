@@ -78,6 +78,25 @@ local GameScene = {
         exists = false,
         phrase = "",
         timer = 0
+    },
+    HEART_POINT = {
+        x = 0,
+        y = 0,
+        width = 25,
+        height = 25,
+        exists = false,
+        timer = 0,
+        collided = false,
+        sprite = love.graphics.newImage("assets/heart-point.png"),
+        sprite_width = 35,
+        sprite_height = 7,
+        quad_width = 7,
+        quad_height = 7,
+        quads = {},
+        animation = {
+            frame = 1,
+            speed = 0.1
+        }
     }
 }
 
@@ -89,6 +108,33 @@ function CollitionDetectionPlayer(collider)
         return true
     end
     return false
+end
+
+function CreateAnimation(frames, quad_width, quad_height, sprite_width, sprite_height)
+    local quads = {}
+    for i = 1, frames do
+        quads[i] = love.graphics.newQuad(
+            (i - 1) * quad_width,
+            0,
+            quad_width,
+            quad_height,
+            sprite_width, sprite_height)
+    end
+    return quads
+end
+
+function PlayAnimation(animation, dt)
+    animation.speed = animation.speed + dt
+
+    if animation.speed > 0.2 then
+        animation.speed = 0.1
+
+        animation.frame = animation.frame + 1
+
+        if animation.frame > 4 then
+            animation.frame = 1
+        end
+    end
 end
 
 function GameScene:load()
@@ -106,15 +152,11 @@ function GameScene:load()
     -- Signal
     Signal = love.graphics.newImage("assets/signal.png")
 
-    for i = 1, 4 do
-        GameScene.PLAYER.quads[i] = love.graphics.newQuad(
-            (i - 1) * GameScene.PLAYER.quad_width,
-            0,
-            GameScene.PLAYER.quad_width,
-            GameScene.PLAYER.quad_height,
-            GameScene.PLAYER.sprite_width,
-            GameScene.PLAYER.sprite_height)
-    end
+    GameScene.PLAYER.quads = CreateAnimation(4, GameScene.PLAYER.quad_width, GameScene.PLAYER.quad_height,
+        GameScene.PLAYER.sprite_width, GameScene.PLAYER.sprite_height)
+
+    GameScene.HEART_POINT.quads = CreateAnimation(5, GameScene.HEART_POINT.quad_width, GameScene.HEART_POINT.quad_height,
+        GameScene.HEART_POINT.sprite_width, GameScene.HEART_POINT.sprite_height)
 
     BULLET_1 = {
         width = 1,
@@ -205,6 +247,29 @@ function GameScene:update(dt)
         GameScene.POINT.collided = true
     end
 
+    if GameScene.SCORE > 0 and GameScene.SCORE % 21 == 0 and GameScene.HEART_POINT.exists == false then
+        GameScene.HEART_POINT.exists = true
+        GameScene.HEART_POINT.x = math.random(INITIAL_X, INITIAL_X + 500 - GameScene.HEART_POINT.width)
+        GameScene.HEART_POINT.y = math.random(INITIAL_Y, INITIAL_Y + 500 - GameScene.HEART_POINT.height)
+        GameScene.HEART_POINT.timer = 0
+        GameScene.HEART_POINT.collided = false
+    end
+
+    if GameScene.HEART_POINT.exists == false then
+        GameScene.HEART_POINT.timer = GameScene.HEART_POINT.timer + 1
+        if GameScene.HEART_POINT.timer > 120 then
+            GameScene.HEART_POINT.exists = false
+        end
+    end
+
+    CollideWithHeartPoint = CollitionDetectionPlayer(GameScene.HEART_POINT)
+
+    if CollideWithHeartPoint == true and GameScene.HEART_POINT.collided == false then
+        GameScene.PLAYER.lives = GameScene.PLAYER.lives + 1
+        GameScene.HEART_POINT.exists = false
+        GameScene.HEART_POINT.collided = true
+    end
+
     if GameScene.ATTACK.exists == false and GameScene.ATTACK.timer > 45 and GameScene.ATTACK.signal.exists == false then
         for i = 1, #Attacks do
             if Attacks[i].type == GameScene.ATTACK.type then
@@ -283,17 +348,11 @@ function GameScene:update(dt)
     end
 
     if GameScene.PLAYER.animation.walk == true then
-        GameScene.PLAYER.animation.speed = GameScene.PLAYER.animation.speed + dt
+        PlayAnimation(GameScene.PLAYER.animation, dt)
+    end
 
-        if GameScene.PLAYER.animation.speed > 0.2 then
-            GameScene.PLAYER.animation.speed = 0.1
-
-            GameScene.PLAYER.animation.frame = GameScene.PLAYER.animation.frame + 1
-
-            if GameScene.PLAYER.animation.frame > 4 then
-                GameScene.PLAYER.animation.frame = 1
-            end
-        end
+    if GameScene.HEART_POINT.exists == true then
+        PlayAnimation(GameScene.HEART_POINT.animation, dt)
     end
 end
 
@@ -322,6 +381,12 @@ function GameScene:draw()
     if GameScene.POINT.exists == true then
         love.graphics.draw(GameScene.POINT.sprite, GameScene.POINT.x, GameScene.POINT.y, 0,
             25 / GameScene.POINT.sprite:getWidth(), 25 / GameScene.POINT.sprite:getHeight())
+    end
+    -- Heart point
+    if GameScene.HEART_POINT.exists == true then
+        love.graphics.draw(GameScene.HEART_POINT.sprite, GameScene.HEART_POINT.quads[GameScene.HEART_POINT.animation.frame],
+            GameScene.HEART_POINT.x, GameScene.HEART_POINT.y, 0,
+            25 / GameScene.HEART_POINT.quad_width, 25 / GameScene.HEART_POINT.quad_height)
     end
     -- Attack
     if GameScene.ATTACK.signal.exists == true then
